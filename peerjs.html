@@ -1,14 +1,21 @@
 <head>
-  <title>peerjs</title>
+	<title>peerjs</title>
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-  {{> loginButtons}}
-  {{> hello}}
+	<h1>Welcome to Meteor!</h1>
+	{{> loginButtons}}
+	
+	{{> userList}}
+
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+<template name="userList">
+	<ul>
+	{{#each users}}
+		<li>
+			<button userId="{{_id}}">{{username}}</button>
+		</li>
+	{{/each}}
+	</ul>
 </template>

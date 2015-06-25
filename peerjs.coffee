@@ -7,9 +7,18 @@ if Meteor.isClient
 		conn.on 'data', (data) ->
 			console.log(data)
 
-	Template.hello.events
+	Template.userList.helpers
+		users: ->
+			users = Meteor.users.find()
+			return users
+
+	Template.userList.events
 		"click button": (event, template) ->
-			conn = peer.connect('bAXCe8EHJk5ygXq6t')
+			userId = $(event.currentTarget).attr "userId"
+
+			conn = peer.connect userId
 			conn.on 'open', ->
 				conn.send('hi!')
-			console.log 'button clicked!'
+
+	Accounts.ui.config
+		passwordSignupFields: 'USERNAME_ONLY'
