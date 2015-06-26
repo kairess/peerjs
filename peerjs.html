@@ -1,21 +1,24 @@
 <head>
-	<title>peerjs</title>
+	<title>Peerjs Example</title>
 </head>
 
 <body>
-	<h1>Welcome to Meteor!</h1>
+	<h1>Send Message</h1>
 	{{> loginButtons}}
-	
+
 	{{> userList}}
 
 </body>
 
 <template name="userList">
+	<input type="file" id="input-box">
 	<ul>
 	{{#each users}}
+		{{#if isOther _id}}
 		<li>
 			<button userId="{{_id}}">{{username}}</button>
 		</li>
+		{{/if}}
 	{{/each}}
 	</ul>
 </template>
