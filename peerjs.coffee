@@ -1,7 +1,21 @@
+dataURItoBlob = (dataURI) ->
+	byteString;
+	if dataURI.split(',')[0].indexOf('base64') >= 0
+		byteString = atob dataURI.split(',')[1]
+	else
+		byteString = unescape dataURI.split(',')[1]
+	mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+	ia = new Uint8Array byteString.length
+	i = 0
+	while i < byteString.length
+		ia[i] = byteString.charCodeAt i
+		i++
+
+	return new Blob [ia], {encoding:"UTF-8", type:mimeString}
+
 if Meteor.isClient
 	if Meteor.userId()
 		peer = new Peer Meteor.userId(), {key: '7v3pa8gnzqmjwcdi'}
-		console.log peer.connections
 
 		peer.on 'open', ->
 			console.log 'My peer ID is: ' + peer.id
@@ -11,14 +25,23 @@ if Meteor.isClient
 				a = document.createElement "a"
 				document.body.appendChild a
 				a.style = "display: none"
+				blobData = dataURItoBlob data.contents
 
-				console.log data
-				# myBlob = new Blob data, {type : 'image/jpeg'}
-				# url = (window.URL || window.webkitURL).createObjectURL myBlob
-				# a.href = url
-				# a.download = '233232.jpg'
-				# a.click()
-				# (window.URL || window.webkitURL).revokeObjectURL url
+				url = (window.URL || window.webkitURL).createObjectURL blobData
+				a.href = url
+				a.download = data.filename
+				a.click()
+				(window.URL || window.webkitURL).revokeObjectURL url
+
+		peer.on 'error', (err) ->
+			console.log 'error!' ,err
+
+		peer.on 'close', ->
+			console.log 'closed!'
+
+		peer.on 'disconnected', ->
+			console.log 'disconnected'
+			peer.reconnect()
 
 	Template.userList.helpers
 		users: ->
@@ -35,13 +58,11 @@ if Meteor.isClient
 
 			reader = new FileReader()
 
-			reader.readAsBinaryString input
+			reader.readAsDataURL input
 
-			reader.onprogress = (event) ->
-			if event.lengthComputable
-				# progressNode.max = event.total;
-				# progressNode.value = event.loaded;
-				console.log event
+			# reader.onprogress = (event) ->
+			# if event.lengthComputable
+			# 	console.log event
 
 			reader.onloadend = (event) ->
 				contents = event.target.result
@@ -50,25 +71,14 @@ if Meteor.isClient
 				if error != null
 					console.error "File could not be read! Code " + error.code
 				else
-					# progressNode.max = 1;
-					# progressNode.value = 1;
-					# console.log "Contents: " + contents
-
 					conn = peer.connect userId
+
 					conn.on 'open', ->
-						conn.send contents
+						conn.send {
+							filename: input.name
+							contents: contents
+						}
 						# template.find('#input-box').value = ''
 
 	Accounts.ui.config
 		passwordSignupFields: 'USERNAME_ONLY'
-
-if Meteor.isServer
-	Meteor.methods
-		"sendMessage": (file) ->
-			console.log file
-			# conn = Session.get "conn"
-			#
-			# send = Meteor.npmRequire('peer-file/send')
-			#
-			# send(conn, file).on 'progress', (bytesSent) ->
-			# 	Math.ceil bytesSent / file.size * 100
